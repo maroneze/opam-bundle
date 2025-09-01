@@ -99,6 +99,19 @@ let create_bundle ocamlv opamv repo debug output env test doc yes self_extract
       in
       OpamConsole.formatted_msg "Opam version is set to %s.\n"
         (OpamConsole.colorise `bold v);
+      begin
+        let components = String.split_on_char '.' v in
+        match components with
+        | [major; minor]
+        | [major; minor; _] ->
+          if major >= "2" || (major == "2" && minor >= "2") then
+            OpamConsole.error_and_exit `Bad_arguments
+              "Unsupported version number, greater than 2.1.x; \
+               bootstrap script will fail when compiling solver: %s" v
+        | _ ->
+          OpamConsole.error_and_exit `Bad_arguments
+            "Invalid version number (missing/too many dots): %s" v
+      end;
       OpamPackage.Version.of_string v
     | None ->
       let default = "2.1.4" in
